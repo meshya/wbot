@@ -115,7 +115,7 @@ class Bot:
     async def participate_notallowed(self, update:Update, context:CallbackContext):
         chat_id = update.effective_chat.id
         tid = update.effective_user.id
-        context.bot.send_message(
+        await context.bot.send_message(
             chat_id=chat_id,
             text=Context.PARTICIPATE_NOTALLOWED,
             reply_markup=InlineKeyboardMarkup(
