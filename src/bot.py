@@ -98,6 +98,9 @@ class Bot:
     async def participate(self, update:Update, context:CallbackContext):
         chat_id = update.effective_chat.id
         tid = update.effective_user.id
+        if not participate_allowed():
+            await self.participate_notallowed(update, context)
+            return
         if not await self.isJoined(update, context):
             await self.join(update, context)
             return
@@ -108,6 +111,19 @@ class Bot:
         user = await repo.user.get(tid=tid)
         service = services.UserService(user)
         await service.set_step('setp')
+    
+    async def participate_notallowed(self, update:Update, context:CallbackContext):
+        chat_id = update.effective_chat.id
+        tid = update.effective_user.id
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=Context.PARTICIPATE_NOTALLOWED,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [InlineKeyboardButton(Context.OK, callback_data='main')]
+                ]
+            )
+        )
 
     async def unvalid_result(self, update:Update, context:CallbackContext):
         await context.bot.send_message(
@@ -127,6 +143,9 @@ class Bot:
         chat_id = update.effective_chat.id
         tid = update.effective_user.id
         value = update.message.text
+        if not participate_allowed():
+            await self.participate_notallowed(update, context)
+            return
         if not value.isdigit():
             await self.unvalid_result(update, context)
             return

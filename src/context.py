@@ -34,3 +34,6 @@ class Context:
     SET_VALUE_DONE='''
 پیش بینی شما ثبت شد
 '''
+    PARTICIPATE_NOTALLOWED='''
+پیش بینی  تنها قبل از ساعت 17 امکان پذیر است
+'''
