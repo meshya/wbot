@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-load_dotenv('../.env')
+load_dotenv()
 
 import asyncio
 from logging.config import fileConfig
