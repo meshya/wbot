@@ -1,5 +1,5 @@
 import os
-from datetime import time, datetime
+from datetime import time, datetime, timedelta
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, CallbackQueryHandler
@@ -10,6 +10,8 @@ import models
 import repo
 import services
 
+from sqlalchemy import select, and_
+
 def participate_allowed():
     maxtime = os.environ.get('TIME')
     if not maxtime:
@@ -18,7 +20,13 @@ def participate_allowed():
     now = datetime.now().time()
     return now < maxtime
 
-
+def start_today():
+    td = datetime.now().date()
+    return datetime(
+        year=td.year,
+        day=td.day,
+        month=td.month,
+    )
 
 class Bot:
     def __init__(self) -> None:
@@ -39,15 +47,15 @@ class Bot:
         if not await self.isJoined(update, context):
             await self.join(update, context)
             return
-        if await repo.user.exists(models.User.id==tuser.id):
-            user = await repo.user.get(tid=tuser.id)
-            if user.step:
-                step = user.step
-                service = services.UserService(user)
-                await service.set_step(None)
-                if step=='setp':
-                    await self.setp(update,context)
-                    return
+        await self.ensure_user(update, context)
+        user = await repo.user.get(models.User.tid==tuser.id)
+        if user.step:
+            step = user.step
+            service = services.UserService(user)
+            await service.set_step(None)
+            if step=='setp':
+                await self.setp(update,context)
+                return
         await self.main(update, context)
 
     async def isJoined(self, update:Update, context:CallbackContext):
@@ -66,20 +74,22 @@ class Bot:
             chat_id=update.effective_chat.id,
             text=text, 
             reply_markup=InlineKeyboardMarkup(keys))
+    async def ensure_user(self, update:Update, context: CallbackContext):
+        tid = update.effective_user.id
+        if not await repo.user.exists(models.User.tid==tid):
+            await repo.user.add(models.User(tid=tid, tun=update.effective_user.username))
 
     async def main(self, update:Update, context: CallbackContext):
         tid = update.effective_user.id
         chat_id = update.effective_chat.id
-        if not await repo.user.exists(models.User.id==tid):
-            await repo.user.add(models.User(tid=tid, tun=update.effective_user.username))
-        user = await repo.user.get(tid=tid)
+        user = await repo.user.get(models.User.tid==tid)
         service = services.UserService(user)
         ps = await service.get_participates()
         if ps:
             pt = []
             for p in ps:
                 v = p.value
-                t = p.fortime
+                t:datetime = p.fortime.replace(microsecond=0)
                 pt += [ Context.PARTICIPATE.format(v=v, t=t) ]
             text = Context.MAIN.format(p='\n'.join(pt))
             keys = [
@@ -113,7 +123,11 @@ class Bot:
             chat_id=chat_id,
             text=Context.SEND_VALUE
         )
-        user = await repo.user.get(tid=tid)
+        where = models.User.tid==tid
+        user = await repo.user.get(where)
+        if not user:
+            await self.main(update, context)
+            
         service = services.UserService(user)
         await service.set_step('setp')
     
@@ -162,10 +176,51 @@ class Bot:
             return
         user = await repo.user.get(models.User.tid==tid)
         service = services.UserService(user)
+        async with db.session() as session:
+            res = await session.execute(
+                select(models.Participate).where(
+                    and_(
+                        models.Participate.user==user,
+                        models.Participate.fortime > start_today()
+                    )
+                    ).order_by(models.Participate.fortime.desc()).limit(3)
+            )
+            ps = res.scalars().fetchall()
+        if len(ps) > 2:
+            remain = (start_today() + timedelta(days=1)) - datetime.now()
+            remain = timedelta(
+                seconds=int(remain.total_seconds())
+            ).__str__()
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=Context.MAX_PARTICIPATE.format(t=remain),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [InlineKeyboardButton(Context.OK, callback_data='main')]
+                    ]
+                )
+            )
+            return
+
+        if ps and ps[0].fortime > datetime.now():
+            remain:timedelta = ps[0].fortime - datetime.now()
+            remain = timedelta(
+                seconds=int(remain.total_seconds())
+            ).__str__()
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=Context.TOOMANY_PARTICIPATE.format(t=remain),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [InlineKeyboardButton(Context.OK, callback_data='main')]
+                    ]
+                )
+            )
+            return
         await service.add_participate(value)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=Context.SET_VALUE_DONE,
+            text=Context.SET_VALUE_DONE.format(p=value),
             reply_markup=InlineKeyboardMarkup(
                 [
                     [InlineKeyboardButton(Context.OK, callback_data='main')]
@@ -186,6 +241,7 @@ class Bot:
         if not await self.isJoined(update, context):
             await self.join(update, context)
             return
+        await self.ensure_user(update, context)
         if data == 'setp':
             await self.participate(update, context)
             return

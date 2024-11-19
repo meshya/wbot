@@ -28,5 +28,5 @@ class Participate(Base):
     settime = Column(DateTime, nullable=False)
     fortime = Column(DateTime, nullable=False)
 
-    user = relationship('User', foreign_keys=[user_id], back_populates='participate')
+    user = relationship('User', foreign_keys=[user_id], backref='participate')
     # event = relationship('Event', foreign_keys=[event_id], back_populates='participate')

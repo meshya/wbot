@@ -13,5 +13,5 @@ class UserService:
     async def add_participate(self, value):
         settime = datetime.now()
         fortime = settime + timedelta(hours=1)
-        obj = models.User(value=value, settime=settime, fortime=fortime)
+        obj = models.Participate(user=self.user ,value=value, settime=settime, fortime=fortime)
         await repo.participate.add(obj)

@@ -1,17 +1,17 @@
 import db, models
 
 from sqlalchemy.future import select
-from sqlalchemy import update, delete, exists
+from sqlalchemy import update, delete, exists, insert
 
 class _repo:
     model = None
     @classmethod
     async def exists(cls ,where):
-        async with db.session() as session:
+        async with db.engine.begin() as conn:
             stmt = select(
                 exists().where(where)
             )
-            res = await session.execute(stmt)
+            res = await conn.execute(stmt)
             return res.scalar()
     @classmethod
     async def get(cls, where):
@@ -26,14 +26,13 @@ class _repo:
         async with db.session() as session:
             stmt = select(cls.model).where(where)
             res = await session.execute(stmt)
-            return list(
-                res.scalar()
-            )
+            return res.scalars().fetchall()
+            
     @classmethod
     async def add(cls, obj):
         async with db.session() as session:
             async with session.begin():
-                await session.add(obj)
+                session.add(obj)
     @classmethod
     def update(cls, **upd):
         class callback:
