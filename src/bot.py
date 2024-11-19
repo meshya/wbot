@@ -85,7 +85,12 @@ class Bot:
         chat_id = update.effective_chat.id
         user = await repo.user.get(models.User.tid==tid)
         service = services.UserService(user)
-        ps = await service.get_participates()
+        ps = await repo.participate.filter(
+            and_(
+                models.Participate.user==user,
+                models.Participate.settime > start_today()
+            )
+        )
         if ps:
             pt = []
             for p in ps:
