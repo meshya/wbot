@@ -1,31 +1,39 @@
 import db, models
 
 from sqlalchemy.future import select
-from sqlalchemy import update, delete
+from sqlalchemy import update, delete, exists
 
 class _repo:
     model = None
     @classmethod
-    async def exists(cls ,**wargs):
+    async def exists(cls ,where):
         async with db.session() as session:
-            res = await session.execute(
-                select(cls.model).filter_by(**wargs)
+            stmt = select(
+                exists().where(where)
             )
-            obj = res.scalar_one_or_none()
-            return obj is not None
+            res = await session.execute(stmt)
+            return res.scalar()
     @classmethod
-    async def get(cls, **wargs):
+    async def get(cls, where):
         async with db.session() as session:
             res = await session.execute(
-                select(cls.model).filter_by(**wargs)
+                select(cls.model).where(where)
             )
             obj = res.scalar_one_or_none()
             return obj
     @classmethod
+    async def filter(cls, where):
+        async with db.session() as session:
+            stmt = select(cls.model).where(where)
+            res = await session.execute(stmt)
+            return list(
+                res.scalar()
+            )
+    @classmethod
     async def add(cls, obj):
         async with db.session() as session:
             async with session.begin():
-                session.add(obj)
+                await session.add(obj)
     @classmethod
     def update(cls, **upd):
         class callback:
@@ -43,3 +51,6 @@ class _repo:
 
 class user(_repo):
     model = models.User
+
+class participate(_repo):
+    model = models.Participate

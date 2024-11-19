@@ -39,7 +39,7 @@ class Bot:
         if not await self.isJoined(update, context):
             await self.join(update, context)
             return
-        if await repo.user.exists(tid=tuser.id):
+        if await repo.user.exists(models.User.id==tuser.id):
             user = await repo.user.get(tid=tuser.id)
             if user.step:
                 step = user.step
@@ -70,13 +70,18 @@ class Bot:
     async def main(self, update:Update, context: CallbackContext):
         tid = update.effective_user.id
         chat_id = update.effective_chat.id
-        if not await repo.user.exists(tid=tid):
+        if not await repo.user.exists(models.User.id==tid):
             await repo.user.add(models.User(tid=tid, tun=update.effective_user.username))
         user = await repo.user.get(tid=tid)
         service = services.UserService(user)
-        p = await service.get_participate()
-        if p:
-            text = Context.MAIN.format(p=p)
+        ps = await service.get_participates()
+        if ps:
+            pt = []
+            for p in ps:
+                v = p.value
+                t = p.fortime
+                pt += [ Context.PARTICIPATE.format(v=v, t=t) ]
+            text = Context.MAIN.format(p='\n'.join(pt))
             keys = [
                 [InlineKeyboardButton(Context.CHANGE_VALUE, callback_data='setp')]
             ]
@@ -153,11 +158,11 @@ class Bot:
         if value > 10000000:
             await self.unvalid_result(update, context)
             return
-        if not await repo.user.exists(tid=tid):
+        if not await repo.user.exists(models.User.tid==tid):
             return
-        user = await repo.user.get(tid=tid)
+        user = await repo.user.get(models.User.tid==tid)
         service = services.UserService(user)
-        await service.set_participate(value)
+        await service.add_participate(value)
         await context.bot.send_message(
             chat_id=chat_id,
             text=Context.SET_VALUE_DONE,
