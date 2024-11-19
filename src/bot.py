@@ -13,6 +13,7 @@ import services
 from sqlalchemy import select, and_
 
 def participate_allowed():
+    return True
     maxtime = os.environ.get('TIME')
     if not maxtime:
         raise RuntimeError('set TIME environment')
