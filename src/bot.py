@@ -69,11 +69,11 @@ class Bot:
         text = Context.JOIN_CHANNEL_MESSAGE
         keys = [
             [InlineKeyboardButton(self.channel, url=f'https://t.me/{self.channel[1:]}')],
-            [InlineKeyboardButton(Context.JOINED_MESSAGE, callback_data='joined')]
+            [InlineKeyboardButton(Context.JOINED_MESSAGE.encode('utf-8'), callback_data='joined')]
         ]
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=text, 
+            text=text.encode('utf-8'), 
             reply_markup=InlineKeyboardMarkup(keys))
     async def ensure_user(self, update:Update, context: CallbackContext):
         tid = update.effective_user.id
@@ -99,21 +99,21 @@ class Bot:
                 pt += [ Context.PARTICIPATE.format(v=v, t=t) ]
             text = Context.MAIN.format(p='\n'.join(pt))
             keys = [
-                [InlineKeyboardButton(Context.CHANGE_VALUE, callback_data='setp')]
+                [InlineKeyboardButton(Context.CHANGE_VALUE.encode('utf-8'), callback_data='setp')]
             ]
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=text,
+                text=text.encode('utf-8'),
                 reply_markup=InlineKeyboardMarkup(keys)
             )
         else:
             text = Context.MAIN_EMPTY
             keys = [
-                [InlineKeyboardButton(Context.SET_VALUE, callback_data='setp')]
+                [InlineKeyboardButton(Context.SET_VALUE.encode('utf-8'), callback_data='setp')]
             ]
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=text,
+                text=text.encode('utf-8'),
                 reply_markup=InlineKeyboardMarkup(keys)
             )
     async def participate(self, update:Update, context:CallbackContext):
@@ -127,7 +127,7 @@ class Bot:
             return
         await context.bot.send_message(
             chat_id=chat_id,
-            text=Context.SEND_VALUE
+            text=Context.SEND_VALUE.encode('utf-8')
         )
         where = models.User.tid==tid
         user = await repo.user.get(where)
@@ -145,7 +145,7 @@ class Bot:
             text=Context.PARTICIPATE_NOTALLOWED,
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton(Context.OK, callback_data='main')]
+                    [InlineKeyboardButton(Context.OK.encode('utf-8'), callback_data='main')]
                 ]
             )
         )
@@ -153,11 +153,11 @@ class Bot:
     async def unvalid_result(self, update:Update, context:CallbackContext):
         await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=Context.UNVALID_RESULT,
+        text=Context.UNVALID_RESULT.encode('utf-8'),
         reply_markup=InlineKeyboardMarkup(
                 [
                     [
-                        InlineKeyboardButton(Context.OK, callback_data='setp')
+                        InlineKeyboardButton(Context.OK.encode('utf-8'), callback_data='setp')
                     ]
                 ]
             )
@@ -199,10 +199,10 @@ class Bot:
             ).__str__()
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=Context.MAX_PARTICIPATE.format(t=remain),
+                text=Context.MAX_PARTICIPATE.format(t=remain).encode('utf-8'),
                 reply_markup=InlineKeyboardMarkup(
                     [
-                        [InlineKeyboardButton(Context.OK, callback_data='main')]
+                        [InlineKeyboardButton(Context.OK.encode('utf-8'), callback_data='main')]
                     ]
                 )
             )
@@ -218,7 +218,7 @@ class Bot:
                 text=Context.TOOMANY_PARTICIPATE.format(t=remain),
                 reply_markup=InlineKeyboardMarkup(
                     [
-                        [InlineKeyboardButton(Context.OK, callback_data='main')]
+                        [InlineKeyboardButton(Context.OK.encode('utf-8'), callback_data='main')]
                     ]
                 )
             )
@@ -226,10 +226,10 @@ class Bot:
         await service.add_participate(value)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=Context.SET_VALUE_DONE.format(p=value),
+            text=Context.SET_VALUE_DONE.format(p=value).encode('utf-8'),
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton(Context.OK, callback_data='main')]
+                    [InlineKeyboardButton(Context.OK.encode('utf-8'), callback_data='main')]
                 ]
             )
         )
