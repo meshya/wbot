@@ -10,6 +10,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     tid = Column(BigInteger, unique=True, nullable=False)
     tun = Column(String(50), nullable=True)
+    tn = Column(String(70), nullable=False)
     step = Column(String(20), nullable=True)
 
 #class Event(Base):
@@ -30,3 +31,10 @@ class Participate(Base):
 
     user = relationship('User', foreign_keys=[user_id], backref='participate')
     # event = relationship('Event', foreign_keys=[event_id], back_populates='participate')
+
+
+class Admin(Base):
+    __tablename__ = 'admin'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tun = Column(String(30), unique=True)

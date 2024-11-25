@@ -27,7 +27,12 @@ class _repo:
             stmt = select(cls.model).where(where)
             res = await session.execute(stmt)
             return res.scalars().fetchall()
-            
+    @classmethod
+    async def all(cls):
+        async with db.session() as session:
+            stmt = select(cls.model)
+            res = await session.execute(stmt)
+            return res.scalars().fetchall()
     @classmethod
     async def add(cls, obj):
         async with db.session() as session:
@@ -53,3 +58,6 @@ class user(_repo):
 
 class participate(_repo):
     model = models.Participate
+
+class admin(_repo):
+    model = models.Admin
