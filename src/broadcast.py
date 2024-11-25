@@ -14,7 +14,7 @@ def broadcast(token, text):
                 asyncio.run(cls.do())
             Process(target=_p).start()
         @classmethod
-        async def do():
+        async def do(cls):
             users = await repo.user.all()
             for user in users:
                 await bot.send_message(

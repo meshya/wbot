@@ -30,6 +30,9 @@ class AdminBot(Bot):
             if step == 'filter':
                 await self.filter(update, context)
                 return
+            if step == 'broadcast':
+                await self.broadcast(update, context)
+                return
         await self.main(update, context)
     
     async def main(self, update:Update, context:CallbackContext):
@@ -67,19 +70,22 @@ class AdminBot(Bot):
             await self.main(update, context)
             return
         value = int(value)
-        participates = services.ParticipateService().get_participates(value, 10)
+        participates = await services.ParticipateService().get_participates(value, 10)
+        results = []
+        for p in participates:
+            user = await repo.user.get(models.User.id==p.user_id)
+            c = Context.FILTER_RESULT.format(
+                n=user.tn,
+                un=user.tun,
+                v=p.value,
+                t=p.settime.replace(microsecond=0)
+            )
+            results.append(c)
         await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = Context.FILTER_RESULT_ALL.format(
                 r='\n'.join(
-                    map(
-                        lambda p: Context.FILTER_RESULT.format(
-                            n=p.user.tn,
-                            un=p.user.tun,
-                            v=p.value,
-                            t=p.settime.replace(microsecond=0)
-                        ), participates
-                    )
+                    results
                 )
             )
         )
@@ -87,7 +93,17 @@ class AdminBot(Bot):
     async def broadcast(self, update:Update, context:Context):
         message = update.message.text
         token = os.environ.get('TOKEN')
-        broadcast(token, message).start()
+        await broadcast(token, message).do()
+
+    async def broadcast_intro(self, update:Update, context:CallbackContext):
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = Context.BROADCAST
+        )
+        await repo.user.update(step='broadcast').where(
+            models.User.tid == update.effective_user.id
+        )
+
 
     async def callback(self, update:Update, context:CallbackContext):
         if not await self.Allowed(update, context):
@@ -98,6 +114,6 @@ class AdminBot(Bot):
         if data == 'filter':
             await self.filter_intro(update, context)
         elif data == 'broadcast':
-            await self.broadcast(update, context)
+            await self.broadcast_intro(update, context)
         else:
             await self.main(update, context)

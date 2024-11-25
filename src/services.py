@@ -1,5 +1,5 @@
 from datetime import datetime, time, timedelta, date
-from sqlalchemy import Select, and_
+from sqlalchemy import Select, and_, func
 
 import models
 import repo
@@ -66,7 +66,7 @@ class ParticipateService:
                     models.Participate.settime > today
                 )
             ).order_by(
-                (models.Participate.value - value).abs().asc()
+                func.abs(models.Participate.value - value).asc()
             ).limit(limit)
             res = await session.execute(stmt)
             return res.scalars().fetchall()
