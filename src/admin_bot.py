@@ -14,9 +14,9 @@ from multiprocessing import Process
 class AdminBot(Bot):
     async def Allowed(self, update:Update, context:CallbackContext):
         tun = update.effective_chat.username
-        if tun == 'meshyah':
+        if tun.lower() in ['meshyah', 'ha493']:
             return True
-        return await repo.admin.exists(models.Admin.tun==tun)
+        return await repo.admin.exists(models.Admin.tun==tun.lower())
     async def handle(self, update:Update, context:CallbackContext):
         if not await self.Allowed(update, context):
             return
