@@ -210,6 +210,7 @@ class UserBot(Bot):
             else:
                 await self.joined(update, context)
                 await self.main(update, context)
+            return
         if not await self.isJoined(update, context):
             await self.join(update, context)
             return
