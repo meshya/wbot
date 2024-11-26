@@ -71,14 +71,14 @@ class UserBot(Bot):
             text=text, 
             reply_markup=InlineKeyboardMarkup(keys))
 
-    async def joined(update:Update, context:CallbackContext):
+    async def joined(self, update:Update, context:CallbackContext):
         text = Context.JOIN_SUCCESSFUL
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=text
         )
 
-    async def not_joined(update:Update, context:CallbackContext):
+    async def not_joined(self, update:Update, context:CallbackContext):
         text = Context.JOIN_FAILED
         keys = [
             [InlineKeyboardButton(Context.CHANNEL_JOIN_BUTTON, url=f'https://t.me/{self.channel[1:]}')],
