@@ -195,6 +195,7 @@ class UserBot(Bot):
             text=Context.SET_VALUE_DONE.format(p=value),
             reply_markup=InlineKeyboardMarkup(
                 [
+                    [InlineKeyboardButton(Context.CHANNEL_LINK_BUTTON, url=f'https://t.me/{self.channel[1:]}')],
                     [InlineKeyboardButton(Context.OK, callback_data='main')]
                 ]
             )
