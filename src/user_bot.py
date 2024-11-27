@@ -9,6 +9,7 @@ import db
 import models
 import repo
 import services
+from timezone import tz
 
 from sqlalchemy import select, and_
 
@@ -21,11 +22,11 @@ def participate_allowed():
         raise RuntimeError('set START_TIME and END_TIME environment')
     maxtime = time(hour=int(maxtime))
     mintime = time(hour=int(mintime))
-    now = datetime.now().time()
+    now = datetime.now(tz).time()
     return now < maxtime and now > mintime
 
 def start_today():
-    td = datetime.now().date()
+    td = datetime.now(tz).date()
     return datetime(
         year=td.year,
         day=td.day,

@@ -4,9 +4,10 @@ from sqlalchemy import Select, and_, func
 import models
 import repo
 import db
+from timezone import tz
 
 def start_today():
-    td = datetime.now().date()
+    td = datetime.now(tz).date()
     return datetime(
         year=td.year,
         day=td.day,
@@ -26,7 +27,7 @@ class UserService:
     async def set_step(self, step):
         await repo.user.update(step=step).where(models.User.id==self.user.id)
     async def set_participate(self, value):
-        settime = datetime.now()
+        settime = datetime.now(tz)
         fortime = start_today() + timedelta(days=1)
         where = and_(
                 models.Participate.user==self.user,
@@ -54,7 +55,7 @@ class UserService:
 class ParticipateService:
     async def get_participates(self, value, limit):
         async with db.session() as session:
-            today = datetime.now().replace(
+            today = datetime.now(tz).replace(
                 hour=0,
                 minute=0,
                 second=0,
