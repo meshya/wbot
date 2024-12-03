@@ -72,21 +72,18 @@ class ParticipateService:
             res = await session.execute(stmt)
             return res.scalars().fetchall()
     async def count_participates(self):
-        async with db.session() as session:
-            today = datetime.now(tz).replace(
-                hour=0,
-                minute=0,
-                second=0,
-                microsecond=0
-            )
-            stmt = Select(models.Participate).where(
-                and_(
-                    models.Participate.settime < today + timedelta(days=1),
-                    models.Participate.settime > today
-                )
-            )
-            res = await session.execute(stmt)
-            return res.scalar()
+        today = datetime.now(tz).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+        where = and_(
+            models.Participate.settime < today + timedelta(days=1),
+            models.Participate.settime > today
+        )
+        return await repo.participate.count(where)
+
     async def avg_participates(self):
         async with db.session() as session:
             today = datetime.now(tz).replace(
