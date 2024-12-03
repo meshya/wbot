@@ -86,7 +86,7 @@ class ParticipateService:
                 )
             )
             res = await session.execute(stmt)
-            return res.scalars()
+            return res.scalar()
     async def avg_participates(self):
         async with db.session() as session:
             today = datetime.now(tz).replace(
@@ -106,5 +106,5 @@ class ParticipateService:
                 )
             )
             res = await session.execute(stmt)
-            return res.scalars()
+            return res.scalar()
 
