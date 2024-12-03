@@ -1,7 +1,7 @@
 import db, models
 
 from sqlalchemy.future import select
-from sqlalchemy import update, delete, exists, insert
+from sqlalchemy import update, delete, exists, insert, func
 
 class _repo:
     model = None
@@ -51,6 +51,15 @@ class _repo:
         async with db.engine.begin() as conn:
             stmt = delete(cls.model).where(where)
             await conn.execute(stmt)
+    @classmethod
+    async def count(cls, *where):
+        async with db.session() as session:
+            async with session.begin():
+                stmt = select(func.count()).select_from(cls.model)
+                if where:
+                    stmt = stmt.where(*where)
+                result = await session.execute(stmt)
+                return result.scalar()
 
 
 class user(_repo):

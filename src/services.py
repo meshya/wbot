@@ -71,3 +71,40 @@ class ParticipateService:
             ).limit(limit)
             res = await session.execute(stmt)
             return res.scalars().fetchall()
+    async def count_participates(self):
+        async with db.session() as session:
+            today = datetime.now(tz).replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
+            stmt = Select(models.Participate).where(
+                and_(
+                    models.Participate.settime < today + timedelta(days=1),
+                    models.Participate.settime > today
+                )
+            )
+            res = await session.execute(stmt)
+            return res.scalars()
+    async def avg_participates(self):
+        async with db.session() as session:
+            today = datetime.now(tz).replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
+            stmt = Select(
+                func.avg(models.Participate.value)
+                ).select_from(
+                    models.Participate
+                ).where(
+                and_(
+                    models.Participate.settime < today + timedelta(days=1),
+                    models.Participate.settime > today
+                )
+            )
+            res = await session.execute(stmt)
+            return res.scalars()
+

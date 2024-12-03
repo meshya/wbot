@@ -13,7 +13,7 @@ from multiprocessing import Process
 
 class AdminBot(Bot):
     async def Allowed(self, update:Update, context:CallbackContext):
-        tun = update.effective_chat.username
+        tun = update.effective_user.username
         if tun.lower() in ['meshyah', 'ha493']:
             return True
         return await repo.admin.exists(models.Admin.tun==tun.lower())
@@ -46,10 +46,16 @@ class AdminBot(Bot):
                         InlineKeyboardButton(
                             Context.BROADCAST_BUTTON,
                             callback_data='broadcast'
-                        ),
+                        )
+                    ],[
                         InlineKeyboardButton(
                             Context.FILTER_USER_BUTTON,
                             callback_data='filter'
+                        )
+                    ],[
+                        InlineKeyboardButton(
+                            Context.REPORT_BUTTON,
+                            callback_data='report'
                         )
                     ]
                 ]
@@ -104,6 +110,18 @@ class AdminBot(Bot):
             models.User.tid == update.effective_user.id
         )
 
+    async def report(self, update:Update, context:CallbackContext):
+        all_users = await repo.user.count()
+        today_participates = await services.ParticipateService().count_participates() 
+        avg_participates = await services.ParticipateService().avg_participates()
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = Context.REPORT.format(
+                u = all_users,
+                p = today_participates,
+                v = avg_participates
+            )
+        )
 
     async def callback(self, update:Update, context:CallbackContext):
         if not await self.Allowed(update, context):
@@ -115,5 +133,7 @@ class AdminBot(Bot):
             await self.filter_intro(update, context)
         elif data == 'broadcast':
             await self.broadcast_intro(update, context)
+        elif data == 'report':
+            await self.report(update, context)
         else:
             await self.main(update, context)
